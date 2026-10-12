@@ -1,0 +1,865 @@
+{
+  "schema_version": 1,
+  "dataset": "FedMML",
+  "classes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "selected_model": "selected_balancing",
+  "runtime_versions": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.9.0",
+    "xgboost": "3.2.0",
+    "joblib": "1.5.3"
+  },
+  "provenance": {
+    "baseline_run_id": "71eafec26795d19a",
+    "study_id": "59268713ed51c68c",
+    "source_sha256": "94b159291b158728ef789e1ec2aef6b81f1fae19b2bd4970abdc2ab897835e0e",
+    "selected_on_validation": true,
+    "test_not_used_for_selection": true,
+    "historical_test_exposure": true,
+    "probability_calibrated": false
+  },
+  "test_rows": 13061,
+  "test_patients": 23,
+  "models": {
+    "selected_balancing": {
+      "label": "XGBoost · tăng mẫu ESI 5",
+      "algorithm": "XGBoost",
+      "selected_on_validation": true,
+      "strategy": "oversample_5_to_4",
+      "file": "models/selected_balancing.joblib",
+      "sha256": "19f242ff832448d1f1c40a69b0e62465549f0d3a826690a5a2957456b6c609e8",
+      "test_metrics": {
+        "macro_f1": 0.7708253615752587,
+        "macro_recall": 0.7717597806352466,
+        "roc_auc_macro_ovr": 0.9608650643687691,
+        "accuracy": 0.8431973049536788,
+        "recall_esi_1": 0.9691358024691358,
+        "recall_esi_2": 0.9655724579663731,
+        "per_class": {
+          "1": {
+            "precision": 1.0,
+            "recall": 0.9691358024691358,
+            "f1-score": 0.9843260188087775,
+            "support": 162.0
+          },
+          "2": {
+            "precision": 0.9905544147843942,
+            "recall": 0.9655724579663731,
+            "f1-score": 0.9779039124265153,
+            "support": 2498.0
+          },
+          "3": {
+            "precision": 0.9291980914268124,
+            "recall": 0.9803507632348165,
+            "f1-score": 0.9540892927696563,
+            "support": 6158.0
+          },
+          "4": {
+            "precision": 0.81859410430839,
+            "recall": 0.6185037121644774,
+            "f1-score": 0.7046193884189981,
+            "support": 3502.0
+          },
+          "5": {
+            "precision": 0.1817496229260935,
+            "recall": 0.3252361673414305,
+            "f1-score": 0.2331881954523464,
+            "support": 741.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            157,
+            4,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            2412,
+            84,
+            1,
+            1
+          ],
+          [
+            0,
+            19,
+            6037,
+            61,
+            41
+          ],
+          [
+            0,
+            0,
+            293,
+            2166,
+            1043
+          ],
+          [
+            0,
+            0,
+            82,
+            418,
+            241
+          ]
+        ],
+        "rows": 13061
+      },
+      "validation_metrics": {
+        "macro_f1": 0.7622092522934718,
+        "macro_recall": 0.760533926602302,
+        "roc_auc_macro_ovr": 0.9611295522872684,
+        "accuracy": 0.8384638829625114,
+        "recall_esi_1": 0.9507042253521126,
+        "recall_esi_2": 0.9664826498422713,
+        "per_class": {
+          "1": {
+            "precision": 1.0,
+            "recall": 0.9507042253521126,
+            "f1-score": 0.9747292418772563,
+            "support": 142.0
+          },
+          "2": {
+            "precision": 0.9907033144704931,
+            "recall": 0.9664826498422713,
+            "f1-score": 0.9784431137724551,
+            "support": 2536.0
+          },
+          "3": {
+            "precision": 0.92925604746691,
+            "recall": 0.980259990370727,
+            "f1-score": 0.9540768509840675,
+            "support": 6231.0
+          },
+          "4": {
+            "precision": 0.7990026850786345,
+            "recall": 0.6001152405646788,
+            "f1-score": 0.6854228364593616,
+            "support": 3471.0
+          },
+          "5": {
+            "precision": 0.1700374531835206,
+            "recall": 0.30510752688172044,
+            "f1-score": 0.2183742183742184,
+            "support": 744.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            135,
+            2,
+            5,
+            0,
+            0
+          ],
+          [
+            0,
+            2451,
+            84,
+            0,
+            1
+          ],
+          [
+            0,
+            21,
+            6108,
+            69,
+            33
+          ],
+          [
+            0,
+            0,
+            314,
+            2083,
+            1074
+          ],
+          [
+            0,
+            0,
+            62,
+            455,
+            227
+          ]
+        ],
+        "rows": 13124
+      }
+    },
+    "baseline_LogisticRegression": {
+      "label": "LogisticRegression · baseline",
+      "algorithm": "LogisticRegression",
+      "selected_on_validation": false,
+      "strategy": "baseline",
+      "file": "models/baseline_LogisticRegression.joblib",
+      "sha256": "a25a1812651e718de2ae804688455bf0db036ec03270522b831f5a2b89bdad30",
+      "test_metrics": {
+        "macro_f1": 0.7384844337260494,
+        "macro_recall": 0.7426234961684786,
+        "roc_auc_macro_ovr": 0.9614586469314345,
+        "accuracy": 0.9000076563815941,
+        "recall_esi_1": 0.8641975308641975,
+        "recall_esi_2": 0.9631705364291433,
+        "per_class": {
+          "1": {
+            "precision": 0.9722222222222222,
+            "recall": 0.8641975308641975,
+            "f1-score": 0.9150326797385621,
+            "support": 162.0
+          },
+          "2": {
+            "precision": 0.9820408163265306,
+            "recall": 0.9631705364291433,
+            "f1-score": 0.9725141471301536,
+            "support": 2498.0
+          },
+          "3": {
+            "precision": 0.9221374045801527,
+            "recall": 0.9808379343942839,
+            "f1-score": 0.9505823103556814,
+            "support": 6158.0
+          },
+          "4": {
+            "precision": 0.8090375287209599,
+            "recall": 0.9049114791547687,
+            "f1-score": 0.8542930314058499,
+            "support": 3502.0
+          },
+          "5": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 741.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            140,
+            21,
+            1,
+            0,
+            0
+          ],
+          [
+            4,
+            2406,
+            88,
+            0,
+            0
+          ],
+          [
+            0,
+            23,
+            6040,
+            95,
+            0
+          ],
+          [
+            0,
+            0,
+            333,
+            3169,
+            0
+          ],
+          [
+            0,
+            0,
+            88,
+            653,
+            0
+          ]
+        ],
+        "rows": 13061
+      },
+      "validation_metrics": {
+        "macro_f1": 0.733112099466261,
+        "macro_recall": 0.7351519540120033,
+        "roc_auc_macro_ovr": 0.9608137874054169,
+        "accuracy": 0.8959158793050899,
+        "recall_esi_1": 0.8380281690140845,
+        "recall_esi_2": 0.9676656151419558,
+        "per_class": {
+          "1": {
+            "precision": 0.9754098360655737,
+            "recall": 0.8380281690140845,
+            "f1-score": 0.9015151515151515,
+            "support": 142.0
+          },
+          "2": {
+            "precision": 0.9796407185628743,
+            "recall": 0.9676656151419558,
+            "f1-score": 0.9736163459631025,
+            "support": 2536.0
+          },
+          "3": {
+            "precision": 0.9210964713009239,
+            "recall": 0.9760873054084417,
+            "f1-score": 0.9477949197444289,
+            "support": 6231.0
+          },
+          "4": {
+            "precision": 0.7968669748330766,
+            "recall": 0.8939786804955344,
+            "f1-score": 0.8426340801086218,
+            "support": 3471.0
+          },
+          "5": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 744.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            119,
+            19,
+            4,
+            0,
+            0
+          ],
+          [
+            3,
+            2454,
+            79,
+            0,
+            0
+          ],
+          [
+            0,
+            31,
+            6082,
+            118,
+            0
+          ],
+          [
+            0,
+            1,
+            367,
+            3103,
+            0
+          ],
+          [
+            0,
+            0,
+            71,
+            673,
+            0
+          ]
+        ],
+        "rows": 13124
+      }
+    },
+    "baseline_RandomForest": {
+      "label": "RandomForest · baseline",
+      "algorithm": "RandomForest",
+      "selected_on_validation": false,
+      "strategy": "baseline",
+      "file": "models/baseline_RandomForest.joblib",
+      "sha256": "f542145ae02b862ccf2d06b5d3cee6285e654afdf950431b08306ab6c02c8df0",
+      "test_metrics": {
+        "macro_f1": 0.7719778236636736,
+        "macro_recall": 0.7753142089352554,
+        "roc_auc_macro_ovr": 0.9611606719024246,
+        "accuracy": 0.8500880483883316,
+        "recall_esi_1": 0.9876543209876543,
+        "recall_esi_2": 0.9723779023218575,
+        "per_class": {
+          "1": {
+            "precision": 0.9815950920245399,
+            "recall": 0.9876543209876543,
+            "f1-score": 0.9846153846153847,
+            "support": 162.0
+          },
+          "2": {
+            "precision": 0.9743281187324508,
+            "recall": 0.9723779023218575,
+            "f1-score": 0.9733520336605891,
+            "support": 2498.0
+          },
+          "3": {
+            "precision": 0.9608929170862706,
+            "recall": 0.929684962650211,
+            "f1-score": 0.9450313634862991,
+            "support": 6158.0
+          },
+          "4": {
+            "precision": 0.7556456282570932,
+            "recall": 0.7452884066247858,
+            "f1-score": 0.750431282346176,
+            "support": 3502.0
+          },
+          "5": {
+            "precision": 0.18026183282980865,
+            "recall": 0.24156545209176788,
+            "f1-score": 0.20645905420991925,
+            "support": 741.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            160,
+            1,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            2429,
+            41,
+            15,
+            13
+          ],
+          [
+            0,
+            62,
+            5725,
+            311,
+            60
+          ],
+          [
+            3,
+            1,
+            147,
+            2610,
+            741
+          ],
+          [
+            0,
+            0,
+            44,
+            518,
+            179
+          ]
+        ],
+        "rows": 13061
+      },
+      "validation_metrics": {
+        "macro_f1": 0.7597008556843294,
+        "macro_recall": 0.7575662069821203,
+        "roc_auc_macro_ovr": 0.9605385703573657,
+        "accuracy": 0.8434166412679062,
+        "recall_esi_1": 0.9507042253521126,
+        "recall_esi_2": 0.9727917981072555,
+        "per_class": {
+          "1": {
+            "precision": 0.9926470588235294,
+            "recall": 0.9507042253521126,
+            "f1-score": 0.9712230215827338,
+            "support": 142.0
+          },
+          "2": {
+            "precision": 0.975870253164557,
+            "recall": 0.9727917981072555,
+            "f1-score": 0.9743285939968405,
+            "support": 2536.0
+          },
+          "3": {
+            "precision": 0.9615192403798101,
+            "recall": 0.9263360616273472,
+            "f1-score": 0.9435998038254046,
+            "support": 6231.0
+          },
+          "4": {
+            "precision": 0.7374528575572962,
+            "recall": 0.7323537885335638,
+            "f1-score": 0.7348944781728823,
+            "support": 3471.0
+          },
+          "5": {
+            "precision": 0.15148514851485148,
+            "recall": 0.2056451612903226,
+            "f1-score": 0.17445838084378562,
+            "support": 744.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            135,
+            4,
+            2,
+            0,
+            1
+          ],
+          [
+            0,
+            2467,
+            41,
+            23,
+            5
+          ],
+          [
+            0,
+            52,
+            5772,
+            318,
+            89
+          ],
+          [
+            1,
+            4,
+            162,
+            2542,
+            762
+          ],
+          [
+            0,
+            1,
+            26,
+            564,
+            153
+          ]
+        ],
+        "rows": 13124
+      }
+    },
+    "baseline_XGBoost": {
+      "label": "XGBoost · baseline",
+      "algorithm": "XGBoost",
+      "selected_on_validation": false,
+      "strategy": "baseline",
+      "file": "models/baseline_XGBoost.joblib",
+      "sha256": "2b5f9e641e378927f30f4f104bc02eaaa81b1fe97c85b1683c1dcd3b1c186d70",
+      "test_metrics": {
+        "macro_f1": 0.7632816085188358,
+        "macro_recall": 0.7709442301089935,
+        "roc_auc_macro_ovr": 0.9600671370517813,
+        "accuracy": 0.8288798713727892,
+        "recall_esi_1": 0.9814814814814815,
+        "recall_esi_2": 0.9711769415532426,
+        "per_class": {
+          "1": {
+            "precision": 0.9754601226993865,
+            "recall": 0.9814814814814815,
+            "f1-score": 0.9784615384615385,
+            "support": 162.0
+          },
+          "2": {
+            "precision": 0.9813915857605178,
+            "recall": 0.9711769415532426,
+            "f1-score": 0.9762575452716298,
+            "support": 2498.0
+          },
+          "3": {
+            "precision": 0.9651320243737306,
+            "recall": 0.9259499837609614,
+            "f1-score": 0.9451350903364827,
+            "support": 6158.0
+          },
+          "4": {
+            "precision": 0.7523685070238484,
+            "recall": 0.6576242147344374,
+            "f1-score": 0.7018131951851287,
+            "support": 3502.0
+          },
+          "5": {
+            "precision": 0.16197666437886069,
+            "recall": 0.3184885290148448,
+            "f1-score": 0.21474067333939945,
+            "support": 741.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            159,
+            2,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            2426,
+            52,
+            10,
+            10
+          ],
+          [
+            2,
+            44,
+            5702,
+            274,
+            136
+          ],
+          [
+            2,
+            0,
+            122,
+            2303,
+            1075
+          ],
+          [
+            0,
+            0,
+            32,
+            473,
+            236
+          ]
+        ],
+        "rows": 13061
+      },
+      "validation_metrics": {
+        "macro_f1": 0.7533250445610067,
+        "macro_recall": 0.7626232180490273,
+        "roc_auc_macro_ovr": 0.9599591654121694,
+        "accuracy": 0.8244437671441633,
+        "recall_esi_1": 0.9577464788732394,
+        "recall_esi_2": 0.972397476340694,
+        "per_class": {
+          "1": {
+            "precision": 0.9379310344827586,
+            "recall": 0.9577464788732394,
+            "f1-score": 0.9477351916376306,
+            "support": 142.0
+          },
+          "2": {
+            "precision": 0.9852177387135438,
+            "recall": 0.972397476340694,
+            "f1-score": 0.9787656281008137,
+            "support": 2536.0
+          },
+          "3": {
+            "precision": 0.9682380474757606,
+            "recall": 0.9295458192906435,
+            "f1-score": 0.9484975026610988,
+            "support": 6231.0
+          },
+          "4": {
+            "precision": 0.747008547008547,
+            "recall": 0.6295015845577643,
+            "f1-score": 0.6832395247029394,
+            "support": 3471.0
+          },
+          "5": {
+            "precision": 0.15360101975780752,
+            "recall": 0.3239247311827957,
+            "f1-score": 0.2083873757025508,
+            "support": 744.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            136,
+            2,
+            1,
+            0,
+            3
+          ],
+          [
+            3,
+            2466,
+            34,
+            21,
+            12
+          ],
+          [
+            4,
+            35,
+            5792,
+            244,
+            156
+          ],
+          [
+            2,
+            0,
+            127,
+            2185,
+            1157
+          ],
+          [
+            0,
+            0,
+            28,
+            475,
+            241
+          ]
+        ],
+        "rows": 13124
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "train_esi_1",
+      "label": "Ca mẫu ESI 1 — tập train",
+      "source_split": "train",
+      "observed_esi": 1,
+      "input": {
+        "age": 60.0,
+        "systolic_bp": 64.0,
+        "diastolic_bp": 111.0,
+        "heart_rate": 47.0,
+        "respiratory_rate": 6.0,
+        "temperature": 39.6,
+        "spo2": 86.9,
+        "pain_score": 9.0,
+        "wbc": null,
+        "hemoglobin": null,
+        "platelet_count": null,
+        "sodium": null,
+        "potassium": null,
+        "creatinine": null,
+        "glucose": null,
+        "troponin": null,
+        "bnp": null,
+        "lactate": null,
+        "inr": null,
+        "sex": "F",
+        "site_id": 1,
+        "country": "Denmark",
+        "arrival_timestamp": "2023-11-18 01:18:00"
+      }
+    },
+    {
+      "id": "train_esi_2",
+      "label": "Ca mẫu ESI 2 — tập train",
+      "source_split": "train",
+      "observed_esi": 2,
+      "input": {
+        "age": 46.0,
+        "systolic_bp": 162.0,
+        "diastolic_bp": 102.0,
+        "heart_rate": 133.0,
+        "respiratory_rate": 26.0,
+        "temperature": 38.1,
+        "spo2": 89.7,
+        "pain_score": 8.0,
+        "wbc": null,
+        "hemoglobin": null,
+        "platelet_count": null,
+        "sodium": null,
+        "potassium": null,
+        "creatinine": null,
+        "glucose": null,
+        "troponin": null,
+        "bnp": null,
+        "lactate": null,
+        "inr": null,
+        "sex": "F",
+        "site_id": 1,
+        "country": "Denmark",
+        "arrival_timestamp": "2022-06-15 07:36:00"
+      }
+    },
+    {
+      "id": "train_esi_3",
+      "label": "Ca mẫu ESI 3 — tập train",
+      "source_split": "train",
+      "observed_esi": 3,
+      "input": {
+        "age": 59.0,
+        "systolic_bp": 122.0,
+        "diastolic_bp": 88.0,
+        "heart_rate": 80.0,
+        "respiratory_rate": 16.0,
+        "temperature": 38.2,
+        "spo2": 97.2,
+        "pain_score": 6.0,
+        "wbc": 7.37,
+        "hemoglobin": 15.5,
+        "platelet_count": 244.0,
+        "sodium": 142.1,
+        "potassium": 3.77,
+        "creatinine": 0.74,
+        "glucose": 75.0,
+        "troponin": 0.0,
+        "bnp": 65.0,
+        "lactate": 1.13,
+        "inr": 1.01,
+        "sex": "F",
+        "site_id": 1,
+        "country": "Denmark",
+        "arrival_timestamp": "2021-01-30 12:33:00"
+      }
+    },
+    {
+      "id": "train_esi_4",
+      "label": "Ca mẫu ESI 4 — tập train",
+      "source_split": "train",
+      "observed_esi": 4,
+      "input": {
+        "age": 58.0,
+        "systolic_bp": 114.0,
+        "diastolic_bp": 76.0,
+        "heart_rate": 85.0,
+        "respiratory_rate": 16.0,
+        "temperature": 37.6,
+        "spo2": 97.8,
+        "pain_score": 1.0,
+        "wbc": 11.03,
+        "hemoglobin": 13.9,
+        "platelet_count": 296.0,
+        "sodium": 139.0,
+        "potassium": 3.82,
+        "creatinine": 1.11,
+        "glucose": 111.0,
+        "troponin": 0.0,
+        "bnp": 56.0,
+        "lactate": 0.94,
+        "inr": 1.12,
+        "sex": "F",
+        "site_id": 1,
+        "country": "Denmark",
+        "arrival_timestamp": "2021-10-20 08:55:00"
+      }
+    },
+    {
+      "id": "train_esi_5",
+      "label": "Ca mẫu ESI 5 — tập train",
+      "source_split": "train",
+      "observed_esi": 5,
+      "input": {
+        "age": 67.0,
+        "systolic_bp": 138.0,
+        "diastolic_bp": 68.0,
+        "heart_rate": 82.0,
+        "respiratory_rate": 18.0,
+        "temperature": 36.7,
+        "spo2": 98.4,
+        "pain_score": 2.0,
+        "wbc": 7.57,
+        "hemoglobin": 12.6,
+        "platelet_count": 242.0,
+        "sodium": 138.4,
+        "potassium": 4.09,
+        "creatinine": 1.15,
+        "glucose": 84.0,
+        "troponin": 0.0,
+        "bnp": 85.0,
+        "lactate": 1.24,
+        "inr": 0.68,
+        "sex": "M",
+        "site_id": 1,
+        "country": "Denmark",
+        "arrival_timestamp": "2022-02-26 01:46:00"
+      }
+    }
+  ],
+  "categories": {
+    "sex": [
+      "F",
+      "M"
+    ],
+    "site_id": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "country": [
+      "Denmark",
+      "Latvia",
+      "Turkey"
+    ]
+  }
+}
