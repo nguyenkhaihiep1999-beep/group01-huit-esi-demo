@@ -2,7 +2,7 @@
 
 Run ID: 71eafec26795d19a
 
-Tập test: 13,061 lượt khám, 23 bệnh nhân.
+Tập test: 13.061 ca tổng hợp, 23 ID mô phỏng. FedMML không có bệnh nhân thật.
 Mô hình được chọn trên validation: **RandomForest**. Lựa chọn được khóa trước khi đánh giá test.
 
 | Thuật toán | Macro F1 | Macro Recall | ROC-AUC macro OvR | Accuracy | Recall ESI 1 | Recall ESI 2 |
@@ -14,7 +14,7 @@ Mô hình được chọn trên validation: **RandomForest**. Lựa chọn đư�
 ## Quy trình
 
 - Dùng duy nhất CSV FedMML hiện có; không sử dụng hoặc tuyên bố sử dụng MIMIC-IV-ED.
-- Giữ cùng split bệnh nhân của nghiên cứu trước để so sánh ổn định; không trùng bệnh nhân giữa các tập.
+- Giữ cùng split theo patient_id mô phỏng của nghiên cứu trước để so sánh ổn định; không trùng ID giữa các tập. Điều này chưa chứng minh các bệnh nhân độc lập.
 - Tối ưu mỗi thuật toán bằng 6 cấu hình, 3 fold StratifiedGroupKFold; chọn theo Macro F1 CV.
 - Điền median, clipping quantile 0.5%/99.5%, StandardScaler và one-hot được fit trong từng fold train.
 - Mỗi thuật toán được refit trên train; validation dùng để chọn thuật toán cuối. Không refit bằng test.
@@ -23,7 +23,7 @@ Mô hình được chọn trên validation: **RandomForest**. Lựa chọn đư�
 
 ## Giới hạn
 
-FedMML này có 87.234 lượt khám nhưng chỉ 96 bệnh nhân. Các lượt khám lặp không phải 87.234 mẫu bệnh nhân độc lập.
+FedMML này có 87.234 ca tổng hợp với 96 patient_id mô phỏng; tuổi và giới tính không nhất quán trong nhiều ID. Các ca không đại diện cho 87.234 mẫu bệnh nhân thật độc lập. Sinh hiệu và xét nghiệm được sinh theo nhãn ESI, nên benchmark đo mức học quy luật dữ liệu sinh.
 Dữ liệu đã được khám phá và tập test đã được đánh giá ở nghiên cứu trước; đây là benchmark phát triển lại, không phải holdout mới chưa từng xem.
 Xác suất chưa được calibration. Kết quả là nghiên cứu trên FedMML, chưa chứng minh khả năng tổng quát hóa trên bệnh nhân hoặc bệnh viện mới.
 

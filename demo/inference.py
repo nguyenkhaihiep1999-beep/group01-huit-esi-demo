@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from fedmml_triage.config import BOUNDS, CATEGORICAL, CLASSES, CONTINUOUS, VITALS
 from fedmml_triage.data import make_features
 from fedmml_triage.io import sha256
+from demo.policy import CORE_VITALS, VITAL_NAMES, LAB_FIELDS
 
 ARTIFACTS = Path(__file__).resolve().parent / "artifacts"
 INPUT_FIELDS = CONTINUOUS + CATEGORICAL + ["arrival_timestamp"]
@@ -57,8 +58,11 @@ def validate_input(payload):
         raise ValueError("Vui lòng nhập tuổi.")
     if not 18 <= row["age"] <= 100:
         raise ValueError("age: demo chỉ hỗ trợ tuổi 18–100, theo phạm vi dữ liệu huấn luyện tổng hợp.")
-    if all(pd.isna(row[field]) for field in VITALS):
-        raise ValueError("Vui lòng nhập ít nhất một dấu hiệu sinh tồn; không dự đoán khi toàn bộ sinh hiệu để trống.")
+    missing_vitals = [field for field in CORE_VITALS if pd.isna(row[field])]
+    if missing_vitals:
+        raise ValueError("Cần đủ sáu sinh hiệu đo được; còn thiếu: " + ", ".join(VITAL_NAMES[field] for field in missing_vitals) + ".")
+    if row["systolic_bp"] <= row["diastolic_bp"]:
+        raise ValueError("Huyết áp tâm thu phải lớn hơn tâm trương; hãy kiểm tra lại số liệu hoặc thứ tự nhập.")
     for field in ["sex", "country"]:
         value = payload.get(field)
         if value is not None and not isinstance(value, str):
@@ -103,7 +107,7 @@ def verify_model(registry, model_id, artifacts=ARTIFACTS):
     return path, record
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=8)
 def _load_verified(path, expected_hash):
     # Verify again immediately before deserialization. No uploaded pickle files are accepted.
     if sha256(path) != expected_hash:
@@ -125,6 +129,12 @@ def predict_case(payload, model_id, artifacts=ARTIFACTS):
     predicted = int(model.predict(make_features(frame))[0])
     if predicted not in CLASSES:
         raise ValueError("Mô hình trả nhãn ESI ngoài phạm vi 1–5.")
+    ignored = list(LAB_FIELDS) if not record.get("uses_labs", True) else []
+    missing = [field for field in missing if field not in ignored]
+    outside = [field for field, bounds in registry.get("training_ranges", {}).items()
+               if field not in ignored and not pd.isna(frame.iloc[0][field])
+               and not bounds["minimum"] <= frame.iloc[0][field] <= bounds["maximum"]]
     return {"model_id": model_id, "model_label": record["label"], "predicted_esi": predicted,
             "scores": {str(c): float(probabilities[i]) for i, c in enumerate(CLASSES)},
-            "missing_fields": missing, "probability_calibrated": False}
+            "missing_fields": missing, "ignored_fields": ignored,
+            "out_of_training_range_fields": outside, "probability_calibrated": False}

@@ -83,6 +83,7 @@
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] { color: var(--ink); font-weight: 600; }
 .st-key-input_panel,
 .st-key-prediction_result,
+.st-key-manual_case,
 [data-testid="stForm"] {
     background: #ffffff;
     border: 1px solid var(--line) !important;
@@ -186,8 +187,10 @@
     [data-testid="stMain"] h1 { font-size: 2.2rem; }
     .page-kicker { font-size: .73rem; }
     .st-key-input_panel,
+    .st-key-manual_case,
     .st-key-prediction_result,
     [data-testid="stForm"] { padding: 1.15rem !important; }
     .case-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .page-footer span { float: none; display: block; margin-top: .3rem; }
 }
+

@@ -13,7 +13,7 @@ Không đổi lựa chọn mô hình sau khi xem kết quả test, kể cả khi
 
 ## Thiết kế có kiểm soát
 
-- Giữ nguyên 26 đặc trưng, preprocessing, split bệnh nhân, seed 42 và siêu tham số của từng baseline.
+- Giữ nguyên 26 đặc trưng, preprocessing, split theo ID mô phỏng, seed 42 và siêu tham số của từng baseline.
 - Sáu phương án × ba thuật toán × ba fold = 54 lượt fit CV; chỉ refit phương án CV tốt nhất của mỗi thuật toán.
 - Preprocessing học trên các dòng train gốc của từng fold trước khi lấy mẫu; không lấy mẫu validation/test.
 - Trọng số được tính lại trong từng fold train, chuẩn hóa trung bình bằng 1.
@@ -77,7 +77,7 @@ Không đổi lựa chọn mô hình sau khi xem kết quả test, kể cả khi
 ## Giới hạn và tái lập
 
 Đây là thử nghiệm có phạm vi cố định, không chứng minh mọi chiến lược cân bằng đều đã được tối ưu.
-FedMML có 96 bệnh nhân; giữ nguyên split 58/15/23 bệnh nhân. Test đã từng được đánh giá và đã góp phần định hướng vấn đề ESI 4–5 cần cải thiện, nên không phải xác nhận độc lập.
+FedMML hoàn toàn tổng hợp, không có bệnh nhân thật; giữ nguyên split 58/15/23 ID mô phỏng. Tuổi và giới tính không nhất quán trong nhiều ID, nên không trùng ID chưa chứng minh tính độc lập giữa bệnh nhân. Test đã từng được đánh giá và đã góp phần định hướng vấn đề ESI 4–5 cần cải thiện, nên không phải xác nhận độc lập.
 Giữ nguyên việc loại chief_complaint và clinical_notes; thử nghiệm này không thêm tín hiệu từ văn bản. Xác suất chưa được calibration.
 Artifact: `outputs/balancing/59268713ed51c68c`. Các fold lưu số lượng lớp trước/sau, chỉ số lấy mẫu giới hạn trong phần fit, và overlap validation bằng 0.
 Study manifest, selection lock, SHA-256 và test receipt cho phép Run All tái sử dụng kết quả đã xác minh.

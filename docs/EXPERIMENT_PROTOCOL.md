@@ -2,7 +2,7 @@
 
 Nguồn duy nhất: FedMML CSV giữ nguyên SHA-256 `94b159291b158728ef789e1ec2aef6b81f1fae19b2bd4970abdc2ab897835e0e`.
 
-Ba thuật toán dùng cùng dữ liệu có cấu trúc và cùng fold bệnh nhân. Patient ID, encounter ID, target và văn bản tự do bị loại khỏi ma trận đặc trưng.
+FedMML hoàn toàn tổng hợp, không có bệnh nhân thật. Ba thuật toán dùng cùng dữ liệu có cấu trúc và cùng fold theo patient_id mô phỏng. Patient ID, encounter ID, target và văn bản tự do bị loại khỏi ma trận đặc trưng.
 
 ## Thứ tự
 
@@ -28,7 +28,7 @@ Quy tắc miền giá trị là quy tắc kỹ thuật kế thừa từ xử lý
 
 ## Lịch sử test
 
-Giữ split patient_id cũ: 58/15/23 bệnh nhân và 61.049/13.124/13.061 lượt khám. Test đã từng được đánh giá; xóa file cũ không làm dữ liệu trở thành holdout mới. Kết luận tổng quát hóa mạnh hơn cần bệnh nhân hoặc dữ liệu ngoài chưa được sử dụng.
+Giữ split patient_id cũ: 58/15/23 ID mô phỏng và 61.049/13.124/13.061 ca tổng hợp. Nhiều ID có tuổi/giới tính không nhất quán; chia tập theo ID chưa chứng minh tính độc lập giữa bệnh nhân. Test đã từng được đánh giá; xóa file cũ không làm dữ liệu trở thành holdout mới. Kết luận tổng quát hóa mạnh hơn cần dữ liệu ngoài độc lập chưa được sử dụng.
 
 ## Thử trọng số/lấy mẫu bổ sung
 
