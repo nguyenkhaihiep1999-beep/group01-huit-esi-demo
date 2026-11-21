@@ -1,4 +1,4 @@
-"""All three algorithms share the same train-fitted preprocessing contract."""
+"""Fold-fitted preprocessing with algorithm-specific missing-value handling."""
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
@@ -7,11 +7,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
 
-from .config import CATEGORICAL, CLASSES, CONTINUOUS, SEED, TEMPORAL
+from .config import CATEGORICAL, CLASSES, CONTINUOUS, DERIVED, LOG_LABS, MISSING_FLAGS, SEED, TEMPORAL
 
 
 class TrainQuantileClipper(TransformerMixin, BaseEstimator):
@@ -48,7 +48,8 @@ class FoldWeightedXGB(ClassifierMixin, BaseEstimator):
     """Map ESI 1..5 to XGBoost 0..4; compute sample weights on each fit's rows."""
 
     def __init__(self, n_estimators=200, max_depth=4, learning_rate=0.1, min_child_weight=1,
-                 subsample=0.9, colsample_bytree=0.9, reg_lambda=1.0, weight_mode="none", n_jobs=2, random_state=SEED):
+                 subsample=0.9, colsample_bytree=0.9, reg_lambda=1.0, weight_mode="none", n_jobs=2, random_state=SEED,
+                 gamma=0.0, reg_alpha=0.0):
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.learning_rate = learning_rate
@@ -59,6 +60,14 @@ class FoldWeightedXGB(ClassifierMixin, BaseEstimator):
         self.weight_mode = weight_mode
         self.n_jobs = n_jobs
         self.random_state = random_state
+        self.gamma = gamma
+        self.reg_alpha = reg_alpha
+
+    def __setstate__(self, state):
+        # Previously saved benchmark/demo artifacts predate these parameters.
+        state.setdefault("gamma", 0.0)
+        state.setdefault("reg_alpha", 0.0)
+        super().__setstate__(state)
 
     def fit(self, X, y):
         y = np.asarray(y, dtype=int)
@@ -72,6 +81,7 @@ class FoldWeightedXGB(ClassifierMixin, BaseEstimator):
             n_estimators=self.n_estimators, max_depth=self.max_depth, learning_rate=self.learning_rate,
             min_child_weight=self.min_child_weight, subsample=self.subsample,
             colsample_bytree=self.colsample_bytree, reg_lambda=self.reg_lambda,
+            gamma=self.gamma, reg_alpha=self.reg_alpha,
             n_jobs=self.n_jobs, random_state=self.random_state, verbosity=0,
         )
         self.estimator_.fit(X, y - 1, sample_weight=weights)
@@ -86,22 +96,34 @@ class FoldWeightedXGB(ClassifierMixin, BaseEstimator):
         return self.classes_[np.argmax(self.predict_proba(X), axis=1)]
 
 
-def make_preprocessor():
-    continuous = Pipeline([
-        ("outlier", TrainQuantileClipper()),
-        ("imputer", SimpleImputer(strategy="median", add_indicator=True, keep_empty_features=True)),
-        ("scaler", StandardScaler()),
-    ])
+def make_preprocessor(algorithm="LogisticRegression"):
+    if algorithm not in ("LogisticRegression", "RandomForest", "XGBoost"):
+        raise ValueError(f"Unsupported algorithm: {algorithm}")
+
+    def numeric(log=False):
+        steps = [("outlier", TrainQuantileClipper())]
+        if log:
+            steps.append(("log1p", FunctionTransformer(np.log1p, feature_names_out="one-to-one")))
+        if algorithm != "XGBoost":
+            steps.append(("imputer", SimpleImputer(strategy="median", keep_empty_features=True)))
+        steps.append(("scaler", StandardScaler()))
+        return Pipeline(steps)
+
     temporal = Pipeline([
         ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
-        ("scaler", StandardScaler()),
     ])
     categorical = Pipeline([
         ("imputer", SimpleImputer(strategy="constant", fill_value="UNKNOWN")),
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ])
     return ColumnTransformer([
-        ("continuous", continuous, CONTINUOUS), ("temporal", temporal, TEMPORAL),
+        ("continuous", numeric(), [name for name in CONTINUOUS if name not in LOG_LABS]),
+        ("log_labs", numeric(log=True), LOG_LABS),
+        ("derived", numeric(), DERIVED[:3]),
+        # Counts, binary flags and cyclic coordinates retain their natural scale.
+        ("counts", "passthrough", DERIVED[3:]),
+        ("missing_flags", "passthrough", MISSING_FLAGS),
+        ("temporal", temporal, TEMPORAL),
         ("categorical", categorical, CATEGORICAL),
     ], remainder="drop")
 
@@ -110,19 +132,20 @@ def model_spaces():
     return {
         "LogisticRegression": (
             LogisticRegression(solver="lbfgs", l1_ratio=0.0, max_iter=2000, random_state=SEED),
-            {"classifier__C": [0.01, 0.1, 1.0, 10.0, 100.0], "classifier__class_weight": [None, "balanced"]},
+            {"classifier__C": [0.01, 0.1, 1.0, 10.0], "classifier__class_weight": [None, "balanced"]},
         ),
         "RandomForest": (
             RandomForestClassifier(random_state=SEED, n_jobs=2),
-            {"classifier__n_estimators": [150, 250], "classifier__max_depth": [None, 12, 20],
-             "classifier__min_samples_leaf": [1, 3, 5], "classifier__max_features": ["sqrt", 0.8],
+            {"classifier__n_estimators": [150, 250], "classifier__max_depth": [8, 10, 12],
+             "classifier__min_samples_leaf": [5, 10, 20], "classifier__max_features": ["sqrt", 0.5],
              "classifier__class_weight": [None, "balanced_subsample"]},
         ),
         "XGBoost": (
             FoldWeightedXGB(),
-            {"classifier__n_estimators": [150, 300], "classifier__max_depth": [3, 5],
-             "classifier__learning_rate": [0.05, 0.1], "classifier__min_child_weight": [1, 5],
-             "classifier__subsample": [0.8, 1.0], "classifier__colsample_bytree": [0.8, 1.0],
-             "classifier__reg_lambda": [1.0, 5.0], "classifier__weight_mode": ["none", "balanced"]},
+            {"classifier__n_estimators": [150, 250], "classifier__max_depth": [3, 4, 5],
+             "classifier__learning_rate": [0.03, 0.05], "classifier__min_child_weight": [5, 10, 20],
+             "classifier__subsample": [0.7, 0.8], "classifier__colsample_bytree": [0.7, 0.8],
+             "classifier__reg_lambda": [2.0, 5.0, 10.0], "classifier__gamma": [0.1, 0.5, 1.0],
+             "classifier__reg_alpha": [0.1, 0.5, 1.0], "classifier__weight_mode": ["none", "balanced"]},
         ),
     }

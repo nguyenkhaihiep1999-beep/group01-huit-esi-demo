@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
 
-from .config import BOUNDS, CATEGORICAL, CLASSES, CONTINUOUS, FEATURES, FORBIDDEN, PROCESSED, REPORTS, SEED, SOURCE, SPLIT_PLAN, TARGET
+from .config import BOUNDS, CATEGORICAL, CLASSES, CONTINUOUS, FEATURES, FORBIDDEN, LABS, MODEL_FEATURES, PROCESSED, REPORTS, SEED, SOURCE, SPLIT_PLAN, TARGET, VITALS
 from .io import read_json, sha256, write_json
 
 
@@ -88,10 +88,33 @@ def assert_no_patient_overlap(splits):
 
 def make_features(df):
     features = df[CONTINUOUS + CATEGORICAL].copy()
+    features["missing_vitals_count"] = features[VITALS].isna().sum(axis=1)
+    features["missing_labs_count"] = features[LABS].isna().sum(axis=1)
+    for col in ["spo2", "troponin", "bnp"]:
+        features[f"{col}_missing"] = features[col].isna().astype(int)
+    # Derive only from observed inputs, before clipping/imputation. A missing
+    # denominator or a non-positive systolic pressure never produces infinity.
+    sbp, dbp = features.systolic_bp, features.diastolic_bp
+    features["shock_index"] = features.heart_rate / sbp.where(sbp > 0)
+    features["mean_arterial_pressure"] = (sbp + 2 * dbp) / 3
+    features["pulse_pressure"] = sbp - dbp
+    danger = pd.concat([
+        features.heart_rate.gt(100), features.respiratory_rate.gt(20),
+        features.spo2.lt(92), sbp.lt(90),
+        features.temperature.gt(38) | features.temperature.lt(36),
+    ], axis=1)
+    # Count observed threshold breaches; unknown measurements contribute zero.
+    # The missing-vitals count distinguishes unobserved from normal vitals.
+    features["danger_vital_count"] = danger.fillna(False).sum(axis=1)
     ts = pd.to_datetime(df.arrival_timestamp, errors="coerce")
     features["arrival_hour"] = ts.dt.hour.astype(float)
     features["arrival_day_of_week"] = ts.dt.dayofweek.astype(float)
     features["arrival_month"] = ts.dt.month.astype(float)
+    for name, values, period in [("hour", ts.dt.hour, 24), ("day_of_week", ts.dt.dayofweek, 7),
+                                 ("month", ts.dt.month - 1, 12)]:
+        angle = 2 * np.pi * values / period
+        features[f"{name}_sin"] = np.sin(angle)
+        features[f"{name}_cos"] = np.cos(angle)
     features["is_weekend"] = (ts.dt.dayofweek >= 5).astype(float).where(ts.notna(), np.nan)
     for col in CATEGORICAL:
         features[col] = features[col].astype(object).where(features[col].notna(), np.nan)
@@ -132,7 +155,7 @@ def export_prepared(raw, clean, splits, cleaning, source=SOURCE, output=PROCESSE
         "dataset": "FedMML", "source_sha256": source_hash, "cleaning": cleaning,
         "splits": split_report, "patient_overlap": 0, "seed": SEED,
         "historical_test_exposure": historical_test_exposure,
-        "forbidden_model_inputs": FORBIDDEN, "model_features": FEATURES,
+        "forbidden_model_inputs": FORBIDDEN, "model_features": MODEL_FEATURES,
     }
     write_json(report_dir / "preprocessing.json", report)
     return report

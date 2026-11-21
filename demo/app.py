@@ -30,10 +30,12 @@ LAB_LABELS = {"wbc": "WBC", "hemoglobin": "Hemoglobin", "platelet_count": "Tiể
 FIELD_LABELS = {"age": "Tuổi", "sex": "Giới tính", "country": "Quốc gia", "site_id": "Cơ sở",
                 "arrival_timestamp": "Thời điểm tiếp nhận", **VITAL_LABELS, **LAB_LABELS}
 MODEL_NAMES = {
-    "selected_balancing": "XGBoost · tăng mẫu ESI 5",
+    "selected_balancing": "Mô hình cân bằng · chọn trên Val",
     "baseline_LogisticRegression": "Logistic Regression",
     "baseline_RandomForest": "Random Forest",
-    "baseline_XGBoost": "XGBoost · bản gốc",
+    "baseline_XGBoost": "XGBoost · OOF anti-overfit",
+    "baseline_SoftVoting": "Soft Voting · RF + XGBoost",
+    "triage_without_labs": "XGBoost · không xét nghiệm",
 }
 
 
@@ -84,7 +86,7 @@ with st.sidebar:
     model_id = st.selectbox("Mô hình", keys, index=keys.index(registry["selected_model"]),
                             format_func=model_name, key="model_id")
     compare = st.checkbox("So sánh các mô hình", value=True, key="compare_models")
-    st.caption("XGBoost tăng mẫu ESI 5 được chọn trên tập validation.")
+    st.caption(f"{model_name(registry['selected_model'])} được chọn khách quan trên validation; ngưỡng quyết định học trên Train OOF CV.")
     st.divider()
     st.markdown("**Về bộ dữ liệu**")
     st.caption("87.234 ca tổng hợp\n\n96 ID mô phỏng · 5 mức ESI")
@@ -248,14 +250,20 @@ with prediction_tab:
                     st.write(f"Nhãn tham khảo: **ESI {saved['example']['observed_esi']}**")
                 if result["missing_fields"]:
                     names = [FIELD_LABELS.get(field, field) for field in result["missing_fields"]]
-                    st.caption("Trường được mô hình điền giá trị: " + ", ".join(names) + ".")
-                    st.caption("Đầu vào thiếu chỉ số: kết quả phụ thuộc giá trị điền của mô hình; chưa được xác nhận lâm sàng.")
+                    st.caption("Trường bị thiếu đầu vào: " + ", ".join(names) + ".")
+                    st.caption("Đầu vào thiếu chỉ số: kết quả phụ thuộc cơ chế xử lý khuyết của mô hình (điền trung vị ở LR/RF hoặc nhánh NaN gốc ở XGBoost); chưa được xác nhận lâm sàng.")
             with right:
-                st.markdown("**Điểm đầu ra theo mức ESI**")
+                st.markdown("**Điểm đầu ra thô theo mức ESI**")
                 show_scores(result)
-                st.caption("Xác suất chưa hiệu chỉnh; không thể dùng như độ tin cậy lâm sàng.")
+                if review.get("decision_rule_shifted"):
+                    top_raw = review["top_two"][0]
+                    st.caption(
+                        f"Thanh tô đậm là nhãn cuối ESI {result['predicted_esi']} sau khi áp dụng hệ số ngưỡng quyết định học trên Train OOF CV "
+                        f"(khác mức có điểm thô cao nhất là ESI {top_raw['esi_level']}: {top_raw['score'] * 100:.2f}%)."
+                    )
+                st.caption("Điểm thô chưa hiệu chỉnh xác suất; nhãn dự đoán áp dụng quy tắc ngưỡng học trên Train OOF CV và không dùng như độ tin cậy lâm sàng.")
                 if review["minimum_margin"] is not None:
-                    st.caption(f"Chênh hai mức đứng đầu: {review['score_margin'] * 100:.2f} điểm %. Ngưỡng xem xét từ validation: {review['minimum_margin'] * 100:.0f} điểm %; không phải ngưỡng an toàn lâm sàng.")
+                    st.caption(f"Chênh hai mức điểm thô đứng đầu: {review['score_margin'] * 100:.2f} điểm %. Ngưỡng xem xét từ validation: {review['minimum_margin'] * 100:.0f} điểm %; không phải ngưỡng an toàn lâm sàng.")
             report = saved["emergency_report"]
             if report:
                 with st.container(key=f"emergency_report_esi_{report['esi_level']}"):
@@ -303,7 +311,7 @@ with results_tab:
     risk_cols = st.columns(2)
     risk_cols[0].metric("ESI 1–2 dự đoán thành 3–5", f"{severe_errors}/{severe_rows}")
     risk_cols[1].metric("Precision ESI 5", f"{metrics['per_class']['5']['precision'] * 100:.2f}%")
-    with st.expander("Đối chiếu bốn mô hình trên test lịch sử", expanded=True):
+    with st.expander("Đối chiếu các mô hình trên test lịch sử", expanded=True):
         rows = [{"Mô hình": model_name(key), "Macro F1": item["test_metrics"]["macro_f1"],
                  "Macro Recall": item["test_metrics"]["macro_recall"], "ROC-AUC": item["test_metrics"]["roc_auc_macro_ovr"],
                  "Recall ESI 4": item["test_metrics"]["per_class"]["4"]["recall"],
@@ -319,8 +327,8 @@ with results_tab:
     st.dataframe(pd.DataFrame(metrics["confusion_matrix"], index=[f"Thực tế ESI {c}" for c in registry["classes"]],
                              columns=[f"Dự đoán ESI {c}" for c in registry["classes"]]), width="stretch")
     with st.expander("Đọc thêm về mức đánh đổi"):
-        st.image(str(ARTIFACTS / "test_per_class.png"), caption="Random Forest bản gốc và XGBoost tăng mẫu ESI 5.")
-        st.write("Recall ESI 5 tăng từ 24,16% lên 32,52%, còn Recall ESI 4 giảm từ 74,53% xuống 61,85%. Macro F1 giảm nhẹ từ 77,20% xuống 77,08%.")
+        st.image(str(ARTIFACTS / "test_per_class.png"), caption="So sánh F1 và Recall từng mức ESI giữa baseline và phương án giữ nguyên sau thử nghiệm cân bằng OOF.")
+        st.write("Các lớp cấp cứu nặng ESI 1–3 đạt độ nhạy rất cao (>95%), trong khi ranh giới ESI 4 và ESI 5 chồng lấn mạnh trong dữ liệu cấu trúc không có văn bản. Toàn bộ ngưỡng quyết định được học trên Out-of-Fold CV của tập train; validation hoàn toàn không bị chạm vào lúc tối ưu.")
         st.write("Dữ liệu hoàn toàn tổng hợp; 96 patient_id không đại diện cho 96 bệnh nhân thật. Các ID có tuổi và giới tính không nhất quán, nên chia tập không trùng ID chưa chứng minh tính độc lập giữa bệnh nhân.")
         st.write("Dấu hiệu sinh tồn và xét nghiệm được sinh theo nhãn ESI. Kết quả ở đây đo mức học quy luật dữ liệu sinh; chưa chứng minh hiệu quả tại bệnh viện hoặc khả năng quyết định nhập viện.")
     study = registry.get("review_study")

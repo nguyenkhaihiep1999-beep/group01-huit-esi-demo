@@ -12,10 +12,18 @@ TARGET = "esi_level"
 VITALS = ["systolic_bp", "diastolic_bp", "heart_rate", "respiratory_rate", "temperature", "spo2", "pain_score"]
 LABS = ["wbc", "hemoglobin", "platelet_count", "sodium", "potassium", "creatinine", "glucose", "troponin", "bnp", "lactate", "inr"]
 CONTINUOUS = ["age"] + VITALS + LABS
-TEMPORAL = ["arrival_hour", "arrival_day_of_week", "arrival_month", "is_weekend"]
-NUMERIC = CONTINUOUS + TEMPORAL
+LEGACY_TEMPORAL = ["arrival_hour", "arrival_day_of_week", "arrival_month"]
+TEMPORAL = ["hour_sin", "hour_cos", "day_of_week_sin", "day_of_week_cos", "month_sin", "month_cos", "is_weekend"]
+LOG_LABS = ["bnp", "troponin", "glucose", "wbc", "creatinine", "lactate"]
+DERIVED = ["shock_index", "mean_arterial_pressure", "pulse_pressure", "danger_vital_count",
+           "missing_vitals_count", "missing_labs_count"]
+MISSING_FLAGS = [f"{name}_missing" for name in ["spo2", "troponin", "bnp"]]
+NUMERIC = CONTINUOUS + DERIVED + TEMPORAL + MISSING_FLAGS
 CATEGORICAL = ["sex", "site_id", "country"]
-FEATURES = NUMERIC + CATEGORICAL
+# Keep legacy coordinates available to already-frozen pipelines; new preprocessors
+# explicitly select the cyclic coordinates and never consume these three columns.
+FEATURES = NUMERIC + CATEGORICAL + LEGACY_TEMPORAL
+MODEL_FEATURES = NUMERIC + CATEGORICAL
 FORBIDDEN = ["patient_id", "encounter_id", TARGET, "chief_complaint", "clinical_notes", "arrival_timestamp"]
 
 # Engineering validity rules inherited from the dataset workflow, not certified clinical cutoffs.
@@ -35,12 +43,17 @@ PROTOCOL = {
     "classes": list(CLASSES),
     "seed": SEED,
     "cv_folds": 3,
-    "search_iterations_per_algorithm": 6,
+    "search_iterations_per_algorithm": 12,
     "primary_cv_metric": "macro_f1",
     "winner_selection": "validation macro_f1, then macro_recall, then macro ROC-AUC OvR",
-    "test_usage": "compare the three frozen models once; reuse verified results on subsequent runs",
+    "test_usage": "compare three frozen models and RF/XGB soft voting once; reuse verified results",
     "historical_test_exposure": True,
-    "features": FEATURES,
+    "features": MODEL_FEATURES,
+    "missingness": "two raw-row counts and three unscaled binary flags; median plus counts for LR/RF; native NaN for XGB",
+    "log1p_labs": LOG_LABS,
+    "decision_tuning": "train-OOF-CV bounded coordinate search of class probability multipliers; identity fallback; validation untouched",
+    "soft_voting_rf_weights": [0.25, 0.5, 0.75],
+    "soft_voting_selection": "train-OOF-CV only; validation used strictly for unbiased comparison",
     "outlier_quantiles": [0.005, 0.995],
     "research_only": True,
 }
