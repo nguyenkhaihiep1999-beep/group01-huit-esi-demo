@@ -25,6 +25,7 @@ Hoặc chạy `run_demo.ps1` rồi mở `http://127.0.0.1:8501`. Dừng bằng `
 ## Cơ chế an toàn & Kiểm chứng của Demo 2.2
 
 - **Nhập thủ công:** Yêu cầu tuổi 18–100, đủ 6 sinh hiệu đo được và huyết áp tâm thu > tâm trương; khóa nhập xét nghiệm tùy ý vì nguồn không xác nhận đơn vị.
+- **Tải tệp CSV (Chấm nhiều ca):** Hỗ trợ tối đa 500 dòng mỗi lần, tự động kiểm tra hợp lệ từng dòng theo cùng quy tắc nhập đơn ca, tự bỏ qua cột định danh/nhãn/văn bản tự do (`FORBIDDEN`), cung cấp tệp CSV mẫu 5 ca và xuất bảng kết quả `.csv`.
 - **Trạng thái *Chưa đủ cơ sở kết luận*:** Tự động bật khi thiếu xét nghiệm (với mô hình dùng xét nghiệm), chỉ số ngoài khoảng quan sát tập train, quy tắc ngưỡng OOF chọn nhãn khác mức có điểm thô cao nhất (`decision_rule_shifted`), hoặc chênh lệch 2 mức điểm thô dẫn đầu nhỏ hơn ngưỡng validation (`review_policy`).
 - **Xóa kết quả cũ tức thì:** Mọi chỉnh sửa đầu vào đều xóa kết quả và bản tải JSON cũ để tránh nhầm lẫn.
 - **Kiểm chứng toàn vẹn:** Chạy `python verify_bundle.py` trước khi mở demo. App tự kiểm tra phiên bản thư viện và SHA-256 trước khi nạp bất kỳ tệp `.joblib` nào.

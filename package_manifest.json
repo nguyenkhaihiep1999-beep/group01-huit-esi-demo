@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "release_id": "52f620fc46",
+  "release_id": "8f54586b7b",
   "name": "GROUP01 HUIT cloud demo",
-  "created_utc": "2026-11-21T02:58:13.302717+00:00",
+  "created_utc": "2026-11-25T00:28:52.866731+00:00",
   "default_model": "baseline_XGBoost",
   "provenance": {
     "baseline_run_id": "fd81afda6ebcb7ea",
@@ -27,10 +27,10 @@
     ".github/workflows/smoke.yml": "4f5230bc864fec90839a29972636a327fb85c4fc5c3c538e9ab7317ab3955592",
     ".gitignore": "db8103b5e5f96018966a67977286ac96c9224fa1ee28adcd1b59d55db9579797",
     ".streamlit/config.toml": "e9dd72c04fd2db04333a923722a0bd9aacefd1eb5eca9b8d22ee1639b1a81a1b",
-    "README.md": "224b9f94cd5de64a47da273a28e726cab607eed04d1c168e3651e4eddcb97292",
-    "demo/README.md": "06692e3924369717c57c9563eb5fe00225ee37936cf980c568a64093efc6b57d",
+    "README.md": "6366803e4ffe671dd58ed5c92db764f5fada81accc6e197a4118dc0ae0595942",
+    "demo/README.md": "c4519e0ea3699931e1cee210e4f67e09272d5f29b53487071dd004cdab7497f8",
     "demo/__init__.py": "f5421b891b9d6e191087899759ee1c53925a0fd43d7c551101653bfda68d492a",
-    "demo/app.py": "81c2eb9801831edc3fbb2c2b4d23cb0d2abe07f2f7c0f71a8e777f0238668d03",
+    "demo/app.py": "1d2c84b32da9c542c84da9bc2cf7479bbb936f70e1d32a4c76f09ee19e3b2772",
     "demo/artifacts/model_registry.json": "9a0577205a3143e3ff45316500dd5ca1338152cb752a118cfe63aafab8f3b0f3",
     "demo/artifacts/model_registry.sha256": "541f3ab94b65fa328c181779b9a7c3067e5462da9f13ddd710f59f77f08bc500",
     "demo/artifacts/models/baseline_LogisticRegression.joblib": "66c9907bfcc9a0a2359548436e230473b42a77cd6b2b5966bd45afbf02f59d7a",
@@ -39,6 +39,7 @@
     "demo/artifacts/models/baseline_XGBoost.joblib": "a3823d92845da1a297ea2cfaad98fa5e1c0535a82399e3a74fdf985fdda95be9",
     "demo/artifacts/models/triage_without_labs.joblib": "8206e4d431ec0c29614b498aa24954ddaaab6c41591af48dd4db0635679b940c",
     "demo/artifacts/test_per_class.png": "09f1bbfe56828c421d0cb914c51b3916d9eeef73b43acca68cb29b074218e5aa",
+    "demo/batch.py": "bcf2593e58a1418bbbdbbd0c64d7aa678eab5e4c5a51a7bd03a05e4fa6d86397",
     "demo/inference.py": "649ab9a07ef2b054f4b682e610e1b06322c9a54c98268e3ef8fd89de3de05e00",
     "demo/policy.py": "fbce137c4b0881fed977d9998b1c32e969b4049235802a84ff10b6792f18a20b",
     "demo/reporting.py": "64f2dd9fb499f6e1ba38181f92bf93ed9a7777c9ee1642c9def06462c7f5c72f",
@@ -50,7 +51,7 @@
     "docs/TECHNICAL_SPECIFICATION.md": "56ab53deda2e3cb15168a74104382bb0e21b4a7a8cffbc659b0efe5ce7d59a9a",
     "packages.txt": "be37c19d7b9818aa5f65e2603202fd89b535a787e5c2b2e51bf3a44b37a993c8",
     "run_demo.ps1": "e94f7d307c04a290086f5fb6217cf3ea5d68c5dc320ffa045b17bf8585c392e1",
-    "smoke_demo.py": "b755e7657ce575f18dca347f2bb2bf63e8a1386b5ea32c37621712eafeb23b5f",
+    "smoke_demo.py": "2141e9e4738e531048bc3fa45a4d55c1e9c96a1c76a4857ab7a453cd4359ed16",
     "src/fedmml_triage/__init__.py": "634c75455a0cf98a0ef9c47ddbd3e7b6505c5d46fcd6ef51a9e0c1d156136fa1",
     "src/fedmml_triage/balancing/__init__.py": "39469b95889ebb563138bc72afdf4a3a7809c331360b5033f9b8473669a7f7d2",
     "src/fedmml_triage/balancing/estimators.py": "2a2578f48a42fb2ea0496e15c3fce1eec79e7fc15a6132f9c3827a708333e582",
@@ -61,5 +62,5 @@
     "src/fedmml_triage/models.py": "53637640a5274626415721b729ab4d23f98997fd43ba6b1248628b77b8b90e37",
     "verify_bundle.py": "22c2984b41a14c41b050043db710a5b166d312d3d65ffa39ba0790b00e86aade"
   },
-  "source_release_id": "773864af52"
+  "source_release_id": "442bc884e1"
 }

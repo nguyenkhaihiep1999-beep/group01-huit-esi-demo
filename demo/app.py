@@ -1,6 +1,7 @@
 """Streamlit presentation app using the original fitted ESI pipelines."""
 
 from datetime import datetime, timezone
+import hashlib
 from html import escape
 import json
 from pathlib import Path
@@ -13,6 +14,7 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from demo.inference import ARTIFACTS, predict_case, read_registry
+from demo.batch import MAX_BATCH_ROWS, read_batch_csv, score_batch, template_csv
 from demo.reporting import emergency_report
 from demo.policy import assess_prediction
 
@@ -94,9 +96,9 @@ with st.sidebar:
 
 st.html('<div class="page-kicker">FedMML <span>/</span> Thực nghiệm phân loại cấp cứu</div>')
 st.title("Phân loại ESI")
-st.write("Chọn một ca mẫu hoặc nhập thông tin để xem dự đoán.")
+st.write("Chọn một ca mẫu, nhập thông tin hoặc tải tệp CSV để xem dự đoán.")
 st.html('<p class="research-note">Dữ liệu hoàn toàn tổng hợp, không có bệnh nhân thật. Demo nghiên cứu; không dùng cho quyết định phân loại cấp cứu hoặc nhập viện.</p>')
-prediction_tab, results_tab = st.tabs(["Dự đoán một ca", "Kết quả thực nghiệm"])
+prediction_tab, results_tab = st.tabs(["Dự đoán ESI", "Kết quả thực nghiệm"])
 
 
 def perform_prediction(payload, example=None):
@@ -122,6 +124,7 @@ def perform_prediction(payload, example=None):
 
 def clear_prediction():
     st.session_state.pop("prediction", None)
+    st.session_state.pop("batch_result", None)
 
 
 def fill_manual_example():
@@ -152,9 +155,63 @@ def clear_manual_inputs():
 
 
 with prediction_tab:
-    mode = st.radio("Nguồn đầu vào", ["Ca mẫu FedMML", "Nhập thủ công"], horizontal=True,
+    mode = st.radio("Nguồn đầu vào", ["Ca mẫu FedMML", "Nhập thủ công", "Tải tệp CSV"], horizontal=True,
                     key="input_mode", label_visibility="collapsed")
-    if mode == "Ca mẫu FedMML":
+    if mode == "Tải tệp CSV":
+        with st.container(border=True, key="batch_panel"):
+            st.markdown("### Chấm nhiều ca từ tệp CSV")
+            st.caption(f"Tối đa {MAX_BATCH_ROWS} dòng mỗi lần. Mỗi dòng được kiểm tra theo cùng quy tắc với nhập một ca "
+                       "(tuổi 18–100, đủ sáu sinh hiệu, huyết áp tâm thu > tâm trương, thời điểm tiếp nhận không kèm múi giờ). "
+                       "Cột định danh, nhãn ESI và văn bản tự do không được dùng làm đầu vào.")
+            st.download_button("Tải tệp CSV mẫu (5 ca)", template_csv(registry), file_name="fedmml_mau_5_ca.csv",
+                               mime="text/csv", key="download_batch_template")
+            uploaded = st.file_uploader("Chọn tệp CSV", type=["csv"], key="batch_file", on_change=clear_prediction)
+            uploaded_bytes = uploaded.getvalue() if uploaded is not None else None
+            uploaded_digest = hashlib.sha256(uploaded_bytes).hexdigest() if uploaded_bytes is not None else None
+            st.caption(f"Mô hình chấm: **{model_name(model_id)}** (đổi ở thanh bên trái).")
+            run_batch = st.button("Chấm tệp CSV", type="primary", key="predict_batch", disabled=uploaded is None)
+        if run_batch and uploaded_bytes is not None:
+            try:
+                table, summary = score_batch(read_batch_csv(uploaded_bytes), model_id)
+                st.session_state["batch_result"] = {"table": table, "summary": summary, "file_name": uploaded.name,
+                                                    "file_sha256": uploaded_digest, "model_id": model_id,
+                                                    "created_at_utc": datetime.now(timezone.utc).isoformat()}
+            except (OSError, ValueError) as exc:
+                st.session_state.pop("batch_result", None)
+                st.error(str(exc))
+        batch = st.session_state.get("batch_result")
+        if batch and (batch["model_id"] != model_id or uploaded_digest is None or batch.get("file_sha256") != uploaded_digest):
+            st.session_state.pop("batch_result", None)
+            batch = None
+        if batch:
+            summary, table = batch["summary"], batch["table"]
+            with st.container(border=True, key="batch_result_panel"):
+                st.markdown("### Kết quả chấm lô")
+                created = datetime.fromisoformat(batch["created_at_utc"]).astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+                st.caption(f"{batch['file_name']} · {model_name(batch['model_id'])} · {created:%d/%m/%Y %H:%M:%S} (GMT+7) · bản {registry.get('demo_version')}")
+                cols = st.columns(4)
+                cols[0].metric("Tổng số dòng", summary["total_rows"])
+                cols[1].metric("Chấm được", summary["succeeded_rows"])
+                cols[2].metric("Lỗi đầu vào", summary["failed_rows"])
+                cols[3].metric("Cần xem xét thêm", summary["review_required_rows"])
+                if summary["reference_matches"] is not None and summary["reference_rows"]:
+                    st.caption(f"Trùng nhãn tham khảo (cột esi_level): {summary['reference_matches']}/{summary['reference_rows']} dòng. "
+                               "Chỉ để đối chiếu thao tác; không phải đánh giá mô hình.")
+                if summary["stripped_columns"]:
+                    st.caption("Đã bỏ qua cột không được dùng làm đầu vào: " + ", ".join(summary["stripped_columns"]) + ".")
+                if summary["ignored_columns"]:
+                    st.caption("Cột không thuộc schema, bị bỏ qua: " + ", ".join(summary["ignored_columns"]) + ".")
+                if summary["succeeded_rows"]:
+                    st.markdown("**Phân bố ESI dự đoán**")
+                    st.bar_chart(pd.DataFrame({"Số ca": [summary["esi_distribution"][c] for c in registry["classes"]]},
+                                              index=[f"ESI {c}" for c in registry["classes"]]))
+                show_errors_only = st.checkbox("Chỉ hiện dòng lỗi", key="batch_errors_only")
+                view = table[table["Lỗi"].notna()] if show_errors_only else table
+                st.dataframe(view, hide_index=True, width="stretch")
+                st.caption("Điểm thô chưa hiệu chỉnh xác suất. Kết quả tham khảo cho nghiên cứu, không dùng cho quyết định lâm sàng.")
+                st.download_button("Tải kết quả (.csv)", table.to_csv(index=False).encode("utf-8-sig"),
+                                   file_name="fedmml_ket_qua_cham_lo.csv", mime="text/csv", key="download_batch_result")
+    elif mode == "Ca mẫu FedMML":
         with st.container(border=True, key="input_panel"):
             st.markdown("### Ca khám mẫu")
             st.caption("Ca tổng hợp lấy từ tập train, dùng để thử thao tác.")
@@ -216,6 +273,8 @@ with prediction_tab:
         if submitted:
             perform_prediction(payload)
 
+    if mode != "Tải tệp CSV":
+        st.session_state.pop("batch_result", None)
     saved = st.session_state.get("prediction")
     current_case_id = example_id if mode == "Ca mẫu FedMML" else None
     if saved and (

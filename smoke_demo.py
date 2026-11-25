@@ -7,6 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1] if Path(__file__).parent.name == "tools" else Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
+from demo.batch import read_batch_csv, score_batch, template_csv
 from demo.inference import predict_case, read_registry, validate_input
 from fedmml_triage.config import LABS, VITALS
 from streamlit.testing.v1 import AppTest
@@ -35,6 +36,9 @@ def main():
         raise AssertionError("Absent vitals accepted")
     missing_labs = predict_case({**payload, **{field: "" for field in LABS}}, registry["selected_model"])
     assert set(LABS) <= set(missing_labs["missing_fields"])
+    batch_table, batch_summary = score_batch(read_batch_csv(template_csv(registry)), registry["selected_model"])
+    assert batch_summary["succeeded_rows"] == len(registry["examples"]) and batch_summary["failed_rows"] == 0
+    assert len(batch_table) == len(registry["examples"])
 
     at = AppTest.from_file(str(ROOT / "demo" / "app.py"), default_timeout=60).run()
     assert not at.exception
@@ -67,7 +71,10 @@ def main():
     at.selectbox(key="model_id").set_value("triage_without_labs").run()
     assert not at.exception
     assert any("Chưa có test độc lập" in item.value for item in at.caption)
-    print("PASS: all models, valid examples, input guards, stale-result clearing and validation-only lab-free UI.")
+    at.radio(key="input_mode").set_value("Tải tệp CSV").run()
+    assert not at.exception
+    assert any("Chấm nhiều ca từ tệp CSV" in item.value for item in at.markdown)
+    print("PASS: all models, valid examples, batch CSV, input guards, stale-result clearing and validation-only lab-free UI.")
 
 
 if __name__ == "__main__":
